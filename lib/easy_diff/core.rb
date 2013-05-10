@@ -5,9 +5,9 @@ module EasyDiff
       added   = nil
 
       if original.nil?
-        added = modified.safe_dup 
+        added = modified.safe_dup
       elsif modified.nil?
-        removed = original.safe_dup 
+        removed = original.safe_dup
       elsif original.is_a?(Hash) && modified.is_a?(Hash)
         removed = {}
         added   = {}
@@ -20,19 +20,28 @@ module EasyDiff
         keys_added.each{ |key| added[key] = modified[key].safe_dup }
         keys_in_common.each do |key|
           r, a = easy_diff original[key], modified[key]
-          removed[key] = r unless r.nil?
-          added[key] = a unless a.nil?
+          removed[key] = r unless r.nil? || r.empty?
+          added[key] = a unless a.nil? || a.empty?
         end
       elsif original.is_a?(Array) && modified.is_a?(Array)
         removed = original - modified
         added   = modified - original
+        removed.each_with_index do |val, index|
+          #WARN: arrays must be ordered the same way.
+          #TODO: order hash elements in some way
+          if removed[index].is_a?(Hash)
+            r, a = easy_diff removed[index], added[index]
+            removed[index] = r unless r.nil? || r.empty?
+            added[index] = a unless a.nil? || a.empty?
+          end
+        end
       elsif original != modified
         removed   = original
         added     = modified
       end
       return removed, added
     end
-  
+
     def self.easy_unmerge!(original, removed)
       if original.is_a?(Hash) && removed.is_a?(Hash)
         original_keys  = original.keys
@@ -47,7 +56,7 @@ module EasyDiff
       end
       original
     end
-  
+
     def self.easy_merge!(original, added)
       if added.nil?
         return original
@@ -62,7 +71,7 @@ module EasyDiff
       end
       original
     end
-    
+
     def self.easy_clone(original)
       Marshal::load(Marshal.dump(original))
     end
