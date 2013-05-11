@@ -20,8 +20,8 @@ module EasyDiff
         keys_added.each{ |key| added[key] = modified[key].safe_dup }
         keys_in_common.each do |key|
           r, a = easy_diff original[key], modified[key]
-          removed[key] = r unless r.nil? || r.empty?
-          added[key] = a unless a.nil? || a.empty?
+          removed[key] = r unless r.nil? || ((r.is_a?(Hash) || r.is_a?(Array)) && r.empty?)
+          added[key] = a unless a.nil? || ((a.is_a?(Hash) || a.is_a?(Array)) && a.empty?)
         end
       elsif original.is_a?(Array) && modified.is_a?(Array)
         removed = original - modified
